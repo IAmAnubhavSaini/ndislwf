@@ -40,19 +40,19 @@ BOOLEAN				filterdInitDone = FALSE;
 PVOID
 filterAuditAllocMem(
     NDIS_HANDLE  NdisHandle,    
-	ULONG	     Size,
-	ULONG	     FileNumber,
-	ULONG	     LineNumber
+    ULONG	     Size,
+    ULONG	     FileNumber,
+    ULONG	     LineNumber
 )
 {
-	PVOID				pBuffer;
-	PFILTERD_ALLOCATION	pAllocInfo;
+    PVOID				pBuffer;
+    PFILTERD_ALLOCATION	pAllocInfo;
 
-	if (!filterdInitDone)
-	{
-		NdisAllocateSpinLock(&(filterdMemoryLock));
-		filterdInitDone = TRUE;
-	}
+    if (!filterdInitDone)
+    {
+        NdisAllocateSpinLock(&(filterdMemoryLock));
+        filterdInitDone = TRUE;
+    }
 
     //
     // Integer overflow check
@@ -61,207 +61,207 @@ filterAuditAllocMem(
     {
         DEBUGP(DL_VERY_LOUD+50,
                ("filterAuditAllocMem: Integer overflow error file %d, line %d, Size %d \n",
-			   FileNumber, LineNumber, Size));
-    
+               FileNumber, LineNumber, Size));
+
         pBuffer = NULL;
     }
     else
     {
-        
-    	pAllocInfo = NdisAllocateMemoryWithTagPriority(
+
+        pAllocInfo = NdisAllocateMemoryWithTagPriority(
             NdisHandle,
-    		Size+sizeof(FILTERD_ALLOCATION),
-    		(ULONG)'gdTF',
+            Size+sizeof(FILTERD_ALLOCATION),
+            (ULONG)'gdTF',
             LowPoolPriority
-    	);
+        );
 
-    	if (pAllocInfo == (PFILTERD_ALLOCATION)NULL)
-    	{
-    		DEBUGP(DL_VERY_LOUD+50,
-    			("filterAuditAllocMem: file %d, line %d, Size %d failed!\n",
-    				FileNumber, LineNumber, Size));
-    		pBuffer = NULL;
-    	}
-    	else
-    	{
-    		pBuffer = (PVOID)&(pAllocInfo->UserData);
-    		NdisFillMemory(pBuffer, Size, 0xaf);
-    		pAllocInfo->Signature = FILTERD_MEMORY_SIGNATURE;
-    		pAllocInfo->FileNumber = FileNumber;
-    		pAllocInfo->LineNumber = LineNumber;
-    		pAllocInfo->Size = Size;
+        if (pAllocInfo == (PFILTERD_ALLOCATION)NULL)
+        {
+            DEBUGP(DL_VERY_LOUD+50,
+                ("filterAuditAllocMem: file %d, line %d, Size %d failed!\n",
+                    FileNumber, LineNumber, Size));
+            pBuffer = NULL;
+        }
+        else
+        {
+            pBuffer = (PVOID)&(pAllocInfo->UserData);
+            NdisFillMemory(pBuffer, Size, 0xaf);
+            pAllocInfo->Signature = FILTERD_MEMORY_SIGNATURE;
+            pAllocInfo->FileNumber = FileNumber;
+            pAllocInfo->LineNumber = LineNumber;
+            pAllocInfo->Size = Size;
             pAllocInfo->OwnerHandle = NdisHandle;
-    		pAllocInfo->Next = (PFILTERD_ALLOCATION)NULL;
+            pAllocInfo->Next = (PFILTERD_ALLOCATION)NULL;
 
-    		NdisAcquireSpinLock(&(filterdMemoryLock));
+            NdisAcquireSpinLock(&(filterdMemoryLock));
 
-    		pAllocInfo->Prev = filterdMemoryTail;
-    		if (filterdMemoryTail == (PFILTERD_ALLOCATION)NULL)
-    		{
+            pAllocInfo->Prev = filterdMemoryTail;
+            if (filterdMemoryTail == (PFILTERD_ALLOCATION)NULL)
+            {
                 //
-    			// empty list
-                // 
-    			filterdMemoryHead = filterdMemoryTail = pAllocInfo;
-    		}
-    		else
-    		{
-    			filterdMemoryTail->Next = pAllocInfo;
-    		}
-    		filterdMemoryTail = pAllocInfo;
-    		
-    		filterdAllocCount++;
-    		NdisReleaseSpinLock(&(filterdMemoryLock));
-    	}
+                // empty list
+                //
+                filterdMemoryHead = filterdMemoryTail = pAllocInfo;
+            }
+            else
+            {
+                filterdMemoryTail->Next = pAllocInfo;
+            }
+            filterdMemoryTail = pAllocInfo;
+
+            filterdAllocCount++;
+            NdisReleaseSpinLock(&(filterdMemoryLock));
+        }
     }
 
-	DEBUGP(DL_VERY_LOUD+100,
-	 ("filterAuditAllocMem: file %c%c%c%c, line %d, %d bytes, OwerHandle %p, Memory 0x%p\n",
-	 			(CHAR)(FileNumber & 0xff),
-	 			(CHAR)((FileNumber >> 8) & 0xff),
-	 			(CHAR)((FileNumber >> 16) & 0xff),
-	 			(CHAR)((FileNumber >> 24) & 0xff),
-				LineNumber, Size, NdisHandle, pBuffer));
+    DEBUGP(DL_VERY_LOUD+100,
+     ("filterAuditAllocMem: file %c%c%c%c, line %d, %d bytes, OwerHandle %p, Memory 0x%p\n",
+                 (CHAR)(FileNumber & 0xff),
+                 (CHAR)((FileNumber >> 8) & 0xff),
+                 (CHAR)((FileNumber >> 16) & 0xff),
+                 (CHAR)((FileNumber >> 24) & 0xff),
+                LineNumber, Size, NdisHandle, pBuffer));
 
-	return (pBuffer);
+    return (pBuffer);
 
 }
 
 
 VOID
 filterAuditFreeMem(
-	PVOID	Pointer
+    PVOID	Pointer
 )
 {
-	PFILTERD_ALLOCATION	pAllocInfo;
+    PFILTERD_ALLOCATION	pAllocInfo;
 
-	NdisAcquireSpinLock(&(filterdMemoryLock));
+    NdisAcquireSpinLock(&(filterdMemoryLock));
 
-	pAllocInfo = CONTAINING_RECORD(Pointer, FILTERD_ALLOCATION, UserData);
+    pAllocInfo = CONTAINING_RECORD(Pointer, FILTERD_ALLOCATION, UserData);
 
-	if (pAllocInfo->Signature != FILTERD_MEMORY_SIGNATURE)
-	{
-		DEBUGP(DL_ERROR,
-		 ("filterAuditFreeMem: unknown buffer 0x%p!\n", Pointer));
-		NdisReleaseSpinLock(&(filterdMemoryLock));
+    if (pAllocInfo->Signature != FILTERD_MEMORY_SIGNATURE)
+    {
+        DEBUGP(DL_ERROR,
+         ("filterAuditFreeMem: unknown buffer 0x%p!\n", Pointer));
+        NdisReleaseSpinLock(&(filterdMemoryLock));
 #if DBG
-		DbgBreakPoint();
+        DbgBreakPoint();
 #endif
-		return;
-	}
+        return;
+    }
 
-	pAllocInfo->Signature = (ULONG)'DEAD';
-	if (pAllocInfo->Prev != (PFILTERD_ALLOCATION)NULL)
-	{
-		pAllocInfo->Prev->Next = pAllocInfo->Next;
-	}
-	else
-	{
-		filterdMemoryHead = pAllocInfo->Next;
-	}
-	if (pAllocInfo->Next != (PFILTERD_ALLOCATION)NULL)
-	{
-		pAllocInfo->Next->Prev = pAllocInfo->Prev;
-	}
-	else
-	{
-		filterdMemoryTail = pAllocInfo->Prev;
-	}
-	filterdAllocCount--;
-	NdisReleaseSpinLock(&(filterdMemoryLock));
+    pAllocInfo->Signature = (ULONG)'DEAD';
+    if (pAllocInfo->Prev != (PFILTERD_ALLOCATION)NULL)
+    {
+        pAllocInfo->Prev->Next = pAllocInfo->Next;
+    }
+    else
+    {
+        filterdMemoryHead = pAllocInfo->Next;
+    }
+    if (pAllocInfo->Next != (PFILTERD_ALLOCATION)NULL)
+    {
+        pAllocInfo->Next->Prev = pAllocInfo->Prev;
+    }
+    else
+    {
+        filterdMemoryTail = pAllocInfo->Prev;
+    }
+    filterdAllocCount--;
+    NdisReleaseSpinLock(&(filterdMemoryLock));
 
-	NdisFreeMemory(pAllocInfo, 0, 0);
+    NdisFreeMemory(pAllocInfo, 0, 0);
 }
 
 
 VOID
 filterAuditShutdown(
-	VOID
+    VOID
 )
 {
-	if (filterdInitDone)
-	{
-		if (filterdAllocCount != 0)
-		{
-			DEBUGP(DL_ERROR, ("AuditShutdown: unfreed memory, %d blocks!\n",
-					filterdAllocCount));
-			DEBUGP(DL_ERROR, ("MemoryHead: 0x%p, MemoryTail: 0x%p\n",
-					filterdMemoryHead, filterdMemoryTail));
-			DbgBreakPoint();
-			{
-				PFILTERD_ALLOCATION		pAllocInfo;
+    if (filterdInitDone)
+    {
+        if (filterdAllocCount != 0)
+        {
+            DEBUGP(DL_ERROR, ("AuditShutdown: unfreed memory, %d blocks!\n",
+                    filterdAllocCount));
+            DEBUGP(DL_ERROR, ("MemoryHead: 0x%p, MemoryTail: 0x%p\n",
+                    filterdMemoryHead, filterdMemoryTail));
+            DbgBreakPoint();
+            {
+                PFILTERD_ALLOCATION		pAllocInfo;
 
-				while (filterdMemoryHead != (PFILTERD_ALLOCATION)NULL)
-				{
-					pAllocInfo = filterdMemoryHead;
-					DEBUGP(DL_INFO, ("AuditShutdown: will free 0x%p\n", pAllocInfo));
-					filterAuditFreeMem(&(pAllocInfo->UserData));
-				}
-			}
-		}
-		filterdInitDone = FALSE;
-	}
+                while (filterdMemoryHead != (PFILTERD_ALLOCATION)NULL)
+                {
+                    pAllocInfo = filterdMemoryHead;
+                    DEBUGP(DL_INFO, ("AuditShutdown: will free 0x%p\n", pAllocInfo));
+                    filterAuditFreeMem(&(pAllocInfo->UserData));
+                }
+            }
+        }
+        filterdInitDone = FALSE;
+    }
 }
 
 #define MAX_HD_LENGTH		128
 
 VOID
 DbgPrintHexDump(
-	IN	PUCHAR			pBuffer,
-	IN	ULONG			Length
+    IN	PUCHAR			pBuffer,
+    IN	ULONG			Length
 )
 /*++
 
 Routine Description:
 
-	Print a hex dump of the given contiguous buffer. If the length
-	is too long, we truncate it.
+    Print a hex dump of the given contiguous buffer. If the length
+    is too long, we truncate it.
 
 Arguments:
 
-	pBuffer			- Points to start of data to be dumped
-	Length			- Length of above.
+    pBuffer			- Points to start of data to be dumped
+    Length			- Length of above.
 
 Return Value:
 
-	None
+    None
 
 --*/
 {
-	ULONG		i;
+    ULONG		i;
 
-	if (Length > MAX_HD_LENGTH)
-	{
-		Length = MAX_HD_LENGTH;
-	}
+    if (Length > MAX_HD_LENGTH)
+    {
+        Length = MAX_HD_LENGTH;
+    }
 
-	for (i = 0; i < Length; i++)
-	{
-		//
-		//  Check if we are at the end of a line
-		//
-		if ((i > 0) && ((i & 0xf) == 0))
-		{
-			DbgPrint("\n");
-		}
+    for (i = 0; i < Length; i++)
+    {
+        //
+        //  Check if we are at the end of a line
+        //
+        if ((i > 0) && ((i & 0xf) == 0))
+        {
+            DbgPrint("\n");
+        }
 
-		//
-		//  Print addr if we are at start of a new line
-		//
-		if ((i & 0xf) == 0)
-		{
-			DbgPrint("%08p ", pBuffer);
-		}
+        //
+        //  Print addr if we are at start of a new line
+        //
+        if ((i & 0xf) == 0)
+        {
+            DbgPrint("%08p ", pBuffer);
+        }
 
-		DbgPrint(" %02x", *pBuffer++);
-	}
+        DbgPrint(" %02x", *pBuffer++);
+    }
 
-	//
-	//  Terminate the last line.
-	//
-	if (Length > 0)
-	{
-		DbgPrint("\n");
-	}
+    //
+    //  Terminate the last line.
+    //
+    if (Length > 0)
+    {
+        DbgPrint("\n");
+    }
 }
 #endif // DBG
 
@@ -272,79 +272,79 @@ NDIS_SPIN_LOCK	filterdLockLock;
 
 VOID
 filterAllocateSpinLock(
-	IN	PFILTER_LOCK		pLock,
-	IN	ULONG				FileNumber,
-	IN	ULONG				LineNumber
+    IN	PFILTER_LOCK		pLock,
+    IN	ULONG				FileNumber,
+    IN	ULONG				LineNumber
 )
 {
-	if (filterdSpinLockInitDone == 0)
-	{
-		filterdSpinLockInitDone = 1;
-		NdisAllocateSpinLock(&(filterdLockLock));
-	}
+    if (filterdSpinLockInitDone == 0)
+    {
+        filterdSpinLockInitDone = 1;
+        NdisAllocateSpinLock(&(filterdLockLock));
+    }
 
-	NdisAcquireSpinLock(&(filterdLockLock));
-	pLock->Signature = FILT_LOCK_SIG;
-	pLock->TouchedByFileNumber = FileNumber;
-	pLock->TouchedInLineNumber = LineNumber;
-	pLock->IsAcquired = 0;
-	pLock->OwnerThread = 0;
-	NdisAllocateSpinLock(&(pLock->NdisLock));
-	NdisReleaseSpinLock(&(filterdLockLock));
+    NdisAcquireSpinLock(&(filterdLockLock));
+    pLock->Signature = FILT_LOCK_SIG;
+    pLock->TouchedByFileNumber = FileNumber;
+    pLock->TouchedInLineNumber = LineNumber;
+    pLock->IsAcquired = 0;
+    pLock->OwnerThread = 0;
+    NdisAllocateSpinLock(&(pLock->NdisLock));
+    NdisReleaseSpinLock(&(filterdLockLock));
 }
 
 VOID
 filterFreeSpinLock(
-	IN	PFILTER_LOCK		pLock
+    IN	PFILTER_LOCK		pLock
     )
 {
-	ASSERT(filterdSpinLockInitDone == 1);
-    
-	
-	NdisFreeSpinLock(&(filterdLockLock));
-	filterdSpinLockInitDone = 0;
+    ASSERT(filterdSpinLockInitDone == 1);
+
+
+    NdisFreeSpinLock(&(filterdLockLock));
+    filterdSpinLockInitDone = 0;
     NdisFreeSpinLock(&(pLock->NdisLock));
-    
+
 }
 
 
 
 VOID
 filterAcquireSpinLock(
-	IN	PFILTER_LOCK		pLock,
-	IN	ULONG				FileNumber,
-	IN	ULONG				LineNumber,
+    IN	PFILTER_LOCK		pLock,
+    IN	ULONG				FileNumber,
+    IN	ULONG				LineNumber,
     IN  BOOLEAN             DispatchLevel
 )
 {
 
     if (DispatchLevel)
     {
-	    NdisDprAcquireSpinLock(&(filterdLockLock));
+        NdisDprAcquireSpinLock(&(filterdLockLock));
     }
     else
     {
         NdisAcquireSpinLock(&(filterdLockLock));
     }
-	if (pLock->Signature != FILT_LOCK_SIG)
-	{
-		DbgPrint("Trying to acquire uninited lock 0x%x, File %c%c%c%c, Line %d\n",
-				pLock,
-				(CHAR)(FileNumber & 0xff),
-				(CHAR)((FileNumber >> 8) & 0xff),
-				(CHAR)((FileNumber >> 16) & 0xff),
-				(CHAR)((FileNumber >> 24) & 0xff),
-				LineNumber);
-		DbgBreakPoint();
-	}
+    if (pLock->Signature != FILT_LOCK_SIG)
+    {
+        DbgPrint("Trying to acquire uninited lock 0x%x, File %c%c%c%c, Line %d\n",
+                pLock,
+                (CHAR)(FileNumber & 0xff),
+                (CHAR)((FileNumber >> 8) & 0xff),
+                (CHAR)((FileNumber >> 16) & 0xff),
+                (CHAR)((FileNumber >> 24) & 0xff),
+                LineNumber);
+        DbgBreakPoint();
+    }
 
 
-	pLock->IsAcquired++;
-    
+    pLock->IsAcquired++;
+
     if (DispatchLevle)
     {
-	    NdisDprReleaseSpinLock(&(filterdLockLock));
-	    NdisDprAcquireSpinLock(&(pLock->NdisLock));
+        NdisDprReleaseSpinLock(&(filterdLockLock));
+        NdisDprAcquireSpinLock(&(pLock->NdisLock));
     }
     else
     {
@@ -352,54 +352,54 @@ filterAcquireSpinLock(
         NdisAcquireSpinLock(&(pLock->NdisLock));
     }
 
-	//
-	//  Mark this lock.
-	//
-	pLock->TouchedByFileNumber = FileNumber;
-	pLock->TouchedInLineNumber = LineNumber;
+    //
+    //  Mark this lock.
+    //
+    pLock->TouchedByFileNumber = FileNumber;
+    pLock->TouchedInLineNumber = LineNumber;
 }
 
 
 VOID
 filterReleaseSpinLock(
-	IN	PFILTER_LOCK		pLock,
-	IN	ULONG				FileNumber,
-	IN	ULONG				LineNumber,
+    IN	PFILTER_LOCK		pLock,
+    IN	ULONG				FileNumber,
+    IN	ULONG				LineNumber,
     IN  BOOLEAN             DispatchLevel
 )
 {
-	NdisDprAcquireSpinLock(&(filterdLockLock));
-	if (pLock->Signature != FILT_LOCK_SIG)
-	{
-		DbgPrint("Trying to release uninited lock 0x%x, File %c%c%c%c, Line %d\n",
-				pLock,
-				(CHAR)(FileNumber & 0xff),
-				(CHAR)((FileNumber >> 8) & 0xff),
-				(CHAR)((FileNumber >> 16) & 0xff),
-				(CHAR)((FileNumber >> 24) & 0xff),
-				LineNumber);
-		DbgBreakPoint();
-	}
+    NdisDprAcquireSpinLock(&(filterdLockLock));
+    if (pLock->Signature != FILT_LOCK_SIG)
+    {
+        DbgPrint("Trying to release uninited lock 0x%x, File %c%c%c%c, Line %d\n",
+                pLock,
+                (CHAR)(FileNumber & 0xff),
+                (CHAR)((FileNumber >> 8) & 0xff),
+                (CHAR)((FileNumber >> 16) & 0xff),
+                (CHAR)((FileNumber >> 24) & 0xff),
+                LineNumber);
+        DbgBreakPoint();
+    }
 
-	if (pLock->IsAcquired == 0)
-	{
-		DbgPrint("Detected release of unacquired lock 0x%x, File %c%c%c%c, Line %d\n",
-				pLock,
-				(CHAR)(FileNumber & 0xff),
-				(CHAR)((FileNumber >> 8) & 0xff),
-				(CHAR)((FileNumber >> 16) & 0xff),
-				(CHAR)((FileNumber >> 24) & 0xff),
-				LineNumber);
-		DbgBreakPoint();
-	}
-	pLock->TouchedByFileNumber = FileNumber;
-	pLock->TouchedInLineNumber = LineNumber;
-	pLock->IsAcquired--;
-	NdisDprReleaseSpinLock(&(filterdLockLock));
+    if (pLock->IsAcquired == 0)
+    {
+        DbgPrint("Detected release of unacquired lock 0x%x, File %c%c%c%c, Line %d\n",
+                pLock,
+                (CHAR)(FileNumber & 0xff),
+                (CHAR)((FileNumber >> 8) & 0xff),
+                (CHAR)((FileNumber >> 16) & 0xff),
+                (CHAR)((FileNumber >> 24) & 0xff),
+                LineNumber);
+        DbgBreakPoint();
+    }
+    pLock->TouchedByFileNumber = FileNumber;
+    pLock->TouchedInLineNumber = LineNumber;
+    pLock->IsAcquired--;
+    NdisDprReleaseSpinLock(&(filterdLockLock));
 
     if (DispatchLevel)
     {
-	    NdisDprReleaseSpinLock(&(pLock->NdisLock));
+        NdisDprReleaseSpinLock(&(pLock->NdisLock));
     }
     else
     {

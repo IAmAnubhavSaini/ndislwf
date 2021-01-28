@@ -5,7 +5,7 @@
 // Temp file to test filter
 //
 
-#define _NDIS_CONTROL_CODE(request,method) \
+#define _NDIS_CONTROL_CODE(request, method) \
             CTL_CODE(FILE_DEVICE_PHYSICAL_NETCARD, request, method, FILE_ANY_ACCESS)
 
 #define IOCTL_FILTER_RESTART_ALL            _NDIS_CONTROL_CODE(0, METHOD_BUFFERED)
@@ -26,61 +26,56 @@
 
 #define MAX_FILTER_INSTANCE_NAME_LENGTH     256
 #define MAX_FILTER_CONFIG_KEYWORD_LENGTH    256
-typedef struct _FILTER_DRIVER_ALL_STAT
-{
-    ULONG          AttachCount;
-    ULONG          DetachCount;
-    ULONG          ExternalRequestFailedCount;
-    ULONG          ExternalRequestSuccessCount;
-    ULONG          InternalRequestFailedCount;
-} FILTER_DRIVER_ALL_STAT, * PFILTER_DRIVER_ALL_STAT;
+typedef struct _FILTER_DRIVER_ALL_STAT {
+    ULONG AttachCount;
+    ULONG DetachCount;
+    ULONG ExternalRequestFailedCount;
+    ULONG ExternalRequestSuccessCount;
+    ULONG InternalRequestFailedCount;
+} FILTER_DRIVER_ALL_STAT, *PFILTER_DRIVER_ALL_STAT;
 
 
-typedef struct _FILTER_SET_OID
-{
-    WCHAR           InstanceName[MAX_FILTER_INSTANCE_NAME_LENGTH];
-    ULONG           InstanceNameLength;
-    NDIS_OID        Oid;
-    NDIS_STATUS     Status;
-    UCHAR           Data[sizeof(ULONG)];
+typedef struct _FILTER_SET_OID {
+    WCHAR InstanceName[MAX_FILTER_INSTANCE_NAME_LENGTH];
+    ULONG InstanceNameLength;
+    NDIS_OID Oid;
+    NDIS_STATUS Status;
+    UCHAR Data[sizeof(ULONG)];
 
-}FILTER_SET_OID, *PFILTER_SET_OID;
+} FILTER_SET_OID, *PFILTER_SET_OID;
 
-typedef struct _FILTER_QUERY_OID
-{
-    WCHAR           InstanceName[MAX_FILTER_INSTANCE_NAME_LENGTH];
-    ULONG           InstanceNameLength;
-    NDIS_OID        Oid;
-    NDIS_STATUS     Status;
-    UCHAR           Data[sizeof(ULONG)];
+typedef struct _FILTER_QUERY_OID {
+    WCHAR InstanceName[MAX_FILTER_INSTANCE_NAME_LENGTH];
+    ULONG InstanceNameLength;
+    NDIS_OID Oid;
+    NDIS_STATUS Status;
+    UCHAR Data[sizeof(ULONG)];
 
-}FILTER_QUERY_OID, *PFILTER_QUERY_OID;
+} FILTER_QUERY_OID, *PFILTER_QUERY_OID;
 
-typedef struct _FILTER_READ_CONFIG
-{
-    __field_bcount_part(MAX_FILTER_INSTANCE_NAME_LENGTH,InstanceNameLength) 
-    WCHAR                   InstanceName[MAX_FILTER_INSTANCE_NAME_LENGTH];
-    ULONG                   InstanceNameLength;
-    __field_bcount_part(MAX_FILTER_CONFIG_KEYWORD_LENGTH,KeywordLength) 
-    WCHAR                   Keyword[MAX_FILTER_CONFIG_KEYWORD_LENGTH];
-    ULONG                   KeywordLength;
-    NDIS_PARAMETER_TYPE     ParameterType;
-    NDIS_STATUS             Status;
-    UCHAR                   Data[sizeof(ULONG)];
-}FILTER_READ_CONFIG, *PFILTER_READ_CONFIG;
+typedef struct _FILTER_READ_CONFIG {
+    __field_bcount_part(MAX_FILTER_INSTANCE_NAME_LENGTH,InstanceNameLength)
+    WCHAR InstanceName[MAX_FILTER_INSTANCE_NAME_LENGTH];
+    ULONG InstanceNameLength;
+    __field_bcount_part(MAX_FILTER_CONFIG_KEYWORD_LENGTH,KeywordLength)
+    WCHAR Keyword[MAX_FILTER_CONFIG_KEYWORD_LENGTH];
+    ULONG KeywordLength;
+    NDIS_PARAMETER_TYPE ParameterType;
+    NDIS_STATUS Status;
+    UCHAR Data[sizeof(ULONG)];
+} FILTER_READ_CONFIG, *PFILTER_READ_CONFIG;
 
-typedef struct _FILTER_WRITE_CONFIG
-{
-    __field_bcount_part(MAX_FILTER_INSTANCE_NAME_LENGTH,InstanceNameLength) 
-    WCHAR                   InstanceName[MAX_FILTER_INSTANCE_NAME_LENGTH];
-    ULONG                   InstanceNameLength;
-    __field_bcount_part(MAX_FILTER_CONFIG_KEYWORD_LENGTH,KeywordLength) 
-    WCHAR                   Keyword[MAX_FILTER_CONFIG_KEYWORD_LENGTH];
-    ULONG                   KeywordLength;
-    NDIS_PARAMETER_TYPE     ParameterType;
-    NDIS_STATUS             Status;
-    UCHAR                   Data[sizeof(ULONG)];
-}FILTER_WRITE_CONFIG, *PFILTER_WRITE_CONFIG;
+typedef struct _FILTER_WRITE_CONFIG {
+    __field_bcount_part(MAX_FILTER_INSTANCE_NAME_LENGTH,InstanceNameLength)
+    WCHAR InstanceName[MAX_FILTER_INSTANCE_NAME_LENGTH];
+    ULONG InstanceNameLength;
+    __field_bcount_part(MAX_FILTER_CONFIG_KEYWORD_LENGTH,KeywordLength)
+    WCHAR Keyword[MAX_FILTER_CONFIG_KEYWORD_LENGTH];
+    ULONG KeywordLength;
+    NDIS_PARAMETER_TYPE ParameterType;
+    NDIS_STATUS Status;
+    UCHAR Data[sizeof(ULONG)];
+} FILTER_WRITE_CONFIG, *PFILTER_WRITE_CONFIG;
 
 #endif //__FILTERUSER_H__
 

@@ -9,7 +9,7 @@
  * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
  * The strings don't need a '\0', since common.ver has them.
  */
-#define	VER_FILETYPE	VFT_DRV
+#define    VER_FILETYPE    VFT_DRV
 /* possible values:		VFT_UNKNOWN
 				VFT_APP
 				VFT_DLL
@@ -18,7 +18,7 @@
 				VFT_VXD
 				VFT_STATIC_LIB
 */
-#define	VER_FILESUBTYPE	VFT2_DRV_NETWORK
+#define    VER_FILESUBTYPE    VFT2_DRV_NETWORK
 /* possible values		VFT2_UNKNOWN
 				VFT2_DRV_PRINTER
 				VFT2_DRV_KEYBOARD

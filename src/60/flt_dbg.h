@@ -26,7 +26,7 @@ Notes:
 #endif
 
 #pragma warning(disable:4201) // named type definition in parentheses
-#pragma warning(disable:4214) 
+#pragma warning(disable:4214)
 
 
 #ifndef _FILTDEBUG__H
@@ -96,8 +96,8 @@ filterReleaseSpinLock(
 
 #else
 
-typedef NDIS_SPIN_LOCK      FILTER_LOCK;
-typedef PNDIS_SPIN_LOCK     PFILTER_LOCK;
+typedef NDIS_SPIN_LOCK FILTER_LOCK;
+typedef PNDIS_SPIN_LOCK PFILTER_LOCK;
 
 #endif    // DBG_SPIN_LOCK
 

@@ -47,14 +47,14 @@ Notes:
 //
 // Global variables
 // 
-extern NDIS_HANDLE         FilterDriverHandle; // NDIS handle for filter driver
-extern NDIS_HANDLE         FilterDriverObject;
-extern NDIS_HANDLE         NdisFilterDeviceHandle;
-extern PDEVICE_OBJECT      DeviceObject;
+extern NDIS_HANDLE FilterDriverHandle; // NDIS handle for filter driver
+extern NDIS_HANDLE FilterDriverObject;
+extern NDIS_HANDLE NdisFilterDeviceHandle;
+extern PDEVICE_OBJECT DeviceObject;
 
-extern FILTER_LOCK         FilterListLock;
-extern LIST_ENTRY          FilterModuleList;
-extern PWCHAR              InstanceStrings;
+extern FILTER_LOCK FilterListLock;
+extern LIST_ENTRY FilterModuleList;
+extern PWCHAR InstanceStrings;
 
 
 #if NDISLWF
@@ -106,15 +106,13 @@ extern PWCHAR              InstanceStrings;
 //
 // Types and macros to manipulate packet queue
 // 
-typedef struct _QUEUE_ENTRY
-{
-    struct _QUEUE_ENTRY * Next;
-}QUEUE_ENTRY, *PQUEUE_ENTRY;
+typedef struct _QUEUE_ENTRY {
+    struct _QUEUE_ENTRY *Next;
+} QUEUE_ENTRY, *PQUEUE_ENTRY;
 
-typedef struct _QUEUE_HEADER
-{
-    PQUEUE_ENTRY     Head;
-    PQUEUE_ENTRY     Tail;
+typedef struct _QUEUE_HEADER {
+    PQUEUE_ENTRY Head;
+    PQUEUE_ENTRY Tail;
 } QUEUE_HEADER, PQUEUE_HEADER;
 
 
@@ -196,7 +194,7 @@ ULONG_PTR    filterLogSendRef[0x10000];
 
 #define FILTER_RELEASE_LOCK(_pLock, DispatchLevel)      \
     filterReleaseSpinLock(_pLock, __FILENUMBER, __LINE__, DispatchLevel)
-    
+
 #else
 #define FILTER_INIT_LOCK(_pLock)      NdisAllocateSpinLock(_pLock)
 
@@ -213,7 +211,7 @@ ULONG_PTR    filterLogSendRef[0x10000];
             NdisAcquireSpinLock(_pLock);                        \
         }                                                       \
     }
-                
+
 #define FILTER_RELEASE_LOCK(_pLock, DispatchLevel)              \
     {                                                           \
         if (DispatchLevel)                                      \
@@ -227,10 +225,10 @@ ULONG_PTR    filterLogSendRef[0x10000];
     }
 #endif //DBG_SPIN_LOCK
 
-    
+
 #define NET_BUFFER_LIST_LINK_TO_ENTRY(_pNBL)    ((PQUEUE_ENTRY)(NET_BUFFER_LIST_NEXT_NBL(_pNBL)))
 #define ENTRY_TO_NET_BUFFER_LIST(_pEnt)         (CONTAINING_RECORD((_pEnt), NET_BUFFER_LIST, Next))
-    
+
 #define InitializeQueueHeader(_QueueHeader)             \
 {                                                       \
     (_QueueHeader)->Head = (_QueueHeader)->Tail = NULL; \
@@ -268,15 +266,14 @@ ULONG_PTR    filterLogSendRef[0x10000];
         else                                                            \
             (_QueueHeader)->Head = (PQUEUE_ENTRY)(_QueueEntry);         \
         (_QueueHeader)->Tail = (PQUEUE_ENTRY)(_QueueEntry);             \
-    }                                                                               
+    }
 
 
 //
 // Enum of filter's states
 // Filter can only be in one state at one time
 //
-typedef enum _FILTER_STATE
-{
+typedef enum _FILTER_STATE {
     FilterStateUnspecified,
     FilterInitialized,
     FilterPausing,
@@ -287,61 +284,58 @@ typedef enum _FILTER_STATE
 } FILTER_STATE;
 
 
-typedef struct _FILTER_REQUEST
-{
-    NDIS_OID_REQUEST       Request;
-    NDIS_EVENT             ReqEvent;
-    NDIS_STATUS            Status;
+typedef struct _FILTER_REQUEST {
+    NDIS_OID_REQUEST Request;
+    NDIS_EVENT ReqEvent;
+    NDIS_STATUS Status;
 } FILTER_REQUEST, *PFILTER_REQUEST;
-        
+
 //
 // Define the filter struct 
 //
-typedef struct _MS_FILTER
-{
-    LIST_ENTRY                     FilterModuleLink;
+typedef struct _MS_FILTER {
+    LIST_ENTRY FilterModuleLink;
     //Reference to this filter
-    ULONG                           RefCount;
-    
-    NDIS_HANDLE                     FilterHandle;
-    NDIS_STRING                     FilterModuleName;
-    NDIS_STRING                     MiniportFriendlyName;
-    NDIS_STRING                     MiniportName;
-    NET_IFINDEX                     MiniportIfIndex;
+    ULONG RefCount;
 
-    NDIS_STATUS                     Status;
-    NDIS_EVENT                      Event;
-    ULONG                           BackFillSize;
-    FILTER_LOCK                     Lock;    // Lock for protection of state and outstanding sends and recvs
+    NDIS_HANDLE FilterHandle;
+    NDIS_STRING FilterModuleName;
+    NDIS_STRING MiniportFriendlyName;
+    NDIS_STRING MiniportName;
+    NET_IFINDEX MiniportIfIndex;
 
-    FILTER_STATE                    State;   // Which state the filter is in
-    ULONG                           Flags;   // contains the state of the filter
-    ULONG                           OutstandingSends;
-    ULONG                           OutstandingRequest;
-    ULONG                           OutstandingRcvs;
-    FILTER_LOCK                     SendLock;
-    FILTER_LOCK                     RcvLock;
-    QUEUE_HEADER                    SendNBLQueue;
-    QUEUE_HEADER                    RcvNBLQueue;
+    NDIS_STATUS Status;
+    NDIS_EVENT Event;
+    ULONG BackFillSize;
+    FILTER_LOCK Lock;    // Lock for protection of state and outstanding sends and recvs
+
+    FILTER_STATE State;   // Which state the filter is in
+    ULONG Flags;   // contains the state of the filter
+    ULONG OutstandingSends;
+    ULONG OutstandingRequest;
+    ULONG OutstandingRcvs;
+    FILTER_LOCK SendLock;
+    FILTER_LOCK RcvLock;
+    QUEUE_HEADER SendNBLQueue;
+    QUEUE_HEADER RcvNBLQueue;
 
 
-    NDIS_STRING                     FilterName;
-    ULONG                           CallsRestart;
-    BOOLEAN                         TrackReceives;
-    BOOLEAN                         TrackSends;
-#if DBG    
+    NDIS_STRING FilterName;
+    ULONG CallsRestart;
+    BOOLEAN TrackReceives;
+    BOOLEAN TrackSends;
+#if DBG
     BOOLEAN                         bIndicating;
-#endif    
+#endif
 
-    PNDIS_OID_REQUEST               PendingOidRequest;
-    
-}MS_FILTER, * PMS_FILTER;
+    PNDIS_OID_REQUEST PendingOidRequest;
+
+} MS_FILTER, *PMS_FILTER;
 
 
-typedef struct _FILTER_DEVICE_EXTENSION
-{
-    ULONG            Signature;
-    NDIS_HANDLE      Handle;
+typedef struct _FILTER_DEVICE_EXTENSION {
+    ULONG Signature;
+    NDIS_HANDLE Handle;
 } FILTER_DEVICE_EXTENSION, *PFILTER_DEVICE_EXTENSION;
 
 
@@ -359,17 +353,16 @@ typedef struct _FILTER_DEVICE_EXTENSION
 //
 // The driver should maintain a list of NDIS filter handles
 //
-typedef struct _FL_NDIS_FILTER_LIST
-{
-    LIST_ENTRY              Link;
-    NDIS_HANDLE             ContextHandle;
-    NDIS_STRING             FilterInstanceName;
+typedef struct _FL_NDIS_FILTER_LIST {
+    LIST_ENTRY Link;
+    NDIS_HANDLE ContextHandle;
+    NDIS_STRING FilterInstanceName;
 } FL_NDIS_FILTER_LIST, *PFL_NDIS_FILTER_LIST;
 
 //
 // The context inside a cloned request
 //
-typedef struct _NDIS_OID_REQUEST *FILTER_REQUEST_CONTEXT,**PFILTER_REQUEST_CONTEXT;
+typedef struct _NDIS_OID_REQUEST *FILTER_REQUEST_CONTEXT, **PFILTER_REQUEST_CONTEXT;
 
 
 //
@@ -387,8 +380,8 @@ DRIVER_UNLOAD FilterUnload;
 
 VOID
 FilterUnload(
-        IN  PDRIVER_OBJECT  DriverObject
-        );
+        IN PDRIVER_OBJECT  DriverObject
+);
 
 FILTER_RESTART FilterRestart;
 
@@ -420,57 +413,57 @@ FILTER_SET_MODULE_OPTIONS FilterSetModuleOptions;
 
 
 NDIS_STATUS
-FilterRegisterDevice(
-    VOID
-    );
+        FilterRegisterDevice(
+        VOID
+);
 
 VOID
-FilterDeregisterDevice(
-    VOID
-    );
+        FilterDeregisterDevice(
+        VOID
+);
 
 DRIVER_DISPATCH FilterDispatch;
 
 NTSTATUS
 FilterDispatch(
-    IN PDEVICE_OBJECT       DeviceObjet,
-    IN PIRP                 Irp
-    );
+        IN PDEVICE_OBJECT       DeviceObjet,
+        IN PIRP                 Irp
+);
 
 DRIVER_DISPATCH FilterDeviceIoControl;
 
 NTSTATUS
 FilterDeviceIoControl(
-    IN PDEVICE_OBJECT        DeviceObject,
-    IN PIRP                  Irp
-    );
+        IN PDEVICE_OBJECT        DeviceObject,
+        IN PIRP                  Irp
+);
 
-PMS_FILTER    
+PMS_FILTER
 filterFindFilterModule(
-    IN PUCHAR                   FilterModuleName,
-    IN ULONG                    BufferLength
-    );
+        IN PUCHAR                   FilterModuleName,
+        IN ULONG                    BufferLength
+);
 
 NDIS_STATUS
 filterDoInternalRequest(
-    IN PMS_FILTER                   FilterModuleContext,
-    IN NDIS_REQUEST_TYPE            RequestType,
-    IN NDIS_OID                     Oid,
-    IN PVOID                        InformationBuffer,
-    IN ULONG                        InformationBufferLength,
-    IN ULONG                        OutputBufferLength, OPTIONAL
-    IN ULONG                        MethodId, OPTIONAL
-    OUT PULONG                      pBytesProcessed
-    );
+        IN PMS_FILTER                   FilterModuleContext,
+        IN NDIS_REQUEST_TYPE            RequestType,
+        IN NDIS_OID                     Oid,
+        IN PVOID                        InformationBuffer,
+        IN ULONG                        InformationBufferLength,
+        IN ULONG                        OutputBufferLength, OPTIONAL
+        IN ULONG MethodId, OPTIONAL
+        OUT PULONG pBytesProcessed
+);
 
 VOID
 filterInternalRequestComplete(
-    IN NDIS_HANDLE                  FilterModuleContext,
-    IN PNDIS_OID_REQUEST            NdisRequest,
-    IN NDIS_STATUS                  Status
-    );
+        IN NDIS_HANDLE                  FilterModuleContext,
+        IN PNDIS_OID_REQUEST            NdisRequest,
+        IN NDIS_STATUS                  Status
+);
 
-UCHAR Empty_MACAddress[6] = {0,0,0,0,0,0}; 
+UCHAR Empty_MACAddress[6] = {0, 0, 0, 0, 0, 0};
 
 
 #endif  //_FILT_H
